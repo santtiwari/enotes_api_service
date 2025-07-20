@@ -2,6 +2,7 @@ package com.becoder.service.impl;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
@@ -63,7 +64,7 @@ public class categoryServiceImpl implements categoryService {
 
 	@Override
 	public List<categoryDto> getAllCategories() {
-		List<Category> categories = catRepository.findAll();
+		List<Category> categories = catRepository.findByIsDeletedFalse();
 		//for java 16 and upper version
 		//categories.stream().map(cat->mapper.map(cat,categoryDto.class)).toList();
          
@@ -78,12 +79,39 @@ public class categoryServiceImpl implements categoryService {
 	@Override
 	public List<categoryResponse> getActiveCategories() {
 		
-		List<Category> categories = catRepository.findByIsActiveTrue();
+		List<Category> categories = catRepository.findByIsActiveTrueAndIsDeletedFalse();
 		List<categoryResponse> categoryList = categories.stream()
 	    .map(cat -> mapper.map(cat, categoryResponse.class))
 	    .collect(Collectors.toList());
 		return categoryList;
 	}
+
+	@Override
+	public categoryDto getCategoryById(Integer id) {
+		Optional<Category> findBycategory = catRepository.findByIdAndIsDeletedFalse(id);
+		
+		if(findBycategory.isPresent()) {
+			Category category = findBycategory.get();
+			return mapper.map(category, categoryDto.class);
+		}
+		return null;
+	}
+
+	@Override
+	public Boolean deleteCategory(Integer id) {
+		Optional<Category> findByCategoryId = catRepository.findById(id);
+		if(findByCategoryId.isPresent()) {
+			Category category = findByCategoryId.get();
+			category.setIsDeleted(true);
+			catRepository.save(category);
+			return true;
+		}
+		return false;
+	}
+	
+	
+	
+	
 	
 	
 	
